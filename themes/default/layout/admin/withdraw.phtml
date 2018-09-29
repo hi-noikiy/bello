@@ -1,0 +1,47 @@
+      <?php
+        if(isset($_GET['completed'])) {
+            global $mysqli;
+            $mysqli->query('update users_withdraw set status = "Completed" where id = "'.$_GET['completed'].'"');
+        } 
+      ?>
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Manage users withdraw requests
+          </h1>
+        </section>
+		<script>aurl = 'withdraw';</script>
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">
+            <div class="col-xs-12">
+              <div class="box">
+                <div class="box-header">
+                  <h3 class="box-title">Manage Withdraws</h3>
+                  <div class="box-tools">
+                  </div>
+                </div><!-- /.box-header -->
+                <div class="box-body table-responsive no-padding">
+                  <table class="table table-hover" id="userslist">
+                    <tr>				
+                      <th>ID</th>				  
+                      <th>User</th>				  
+                      <th>PayPal Email</th>
+                      <th>Money to send</a></th>	
+                      <th>Withdraw Satus</th>		
+                      <th></th>				  
+                    </tr>
+					         <?= getAdminWithdraws(); ?>
+                  </table>
+                </div><!-- /.box-body -->
+                <div class="box-footer clearfix">
+                </div>
+              </div><!-- /.box -->
+            </div>		  
+	
+		</div>	
+		
+		
+	</section>
+</div>	

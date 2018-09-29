@@ -1,0 +1,145 @@
+<?php
+global $mysqli;
+if(isset($_GET['u'])){
+  $id = secureEncode($_GET['u']);
+  $credits = secureEncode($_GET['credits']);
+  $price = secureEncode($_GET['price']);
+  $mysqli->query("UPDATE config_withdraw set credits = '".$credits."',price = '".$price."' where id = '".$id."'");
+  header('Location:'.$sm['config']['site_url'].'index.php?page=admin&p=withdrawl');
+}
+if(isset($_GET['update'])){
+  $e = secureEncode($_GET['e']);
+  $d = secureEncode($_GET['d']);
+  $mysqli->query("UPDATE config set wEnabled = '".$e."',wTime = '".$d."'");
+  header('Location:'.$sm['config']['site_url'].'index.php?page=admin&p=withdrawl');
+}
+if(isset($_GET['a'])){
+  $id = secureEncode($_GET['a']);
+  $credits = secureEncode($_GET['credits']);
+  $price = secureEncode($_GET['price']);
+  $query = $mysqli->query("SELECT * FROM languages order by id ASC");
+  if ($query->num_rows > 0) { 
+    while($re = $query->fetch_object()){  
+        $mysqli->query("INSERT INTO config_withdraw (id,credits,price) 
+          VALUES ('".$id."','".$credits."','".$price."')");
+    }
+  }
+  header('Location:'.$sm['config']['site_url'].'index.php?page=admin&p=withdrawl');
+}
+if(isset($_GET['d'])){
+  $id = secureEncode($_GET['d']);
+  $mysqli->query("DELETE FROM config_withdraw where id = '".$id."'");
+  header('Location:'.$sm['config']['site_url'].'index.php?page=admin&p=withdrawl');
+}
+?>
+      <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+          <h1>
+            Withdrawl settings
+          </h1>
+        </section>
+    <script>aurl = 'withdrawl';</script>
+        <!-- Main content -->
+        <section class="content">
+          <div class="row">     
+            <div class="col-md-6">
+            <!-- general form elements -->
+              <div class="box box-primary">
+                <div class="box-header">
+                  <h3 class="box-title">Withdrawl settings</h3>
+                </div><!-- /.box-header -->
+                <!-- form start -->
+                  <div class="box-body"> 
+                    <div class="form-group">
+                      <label for="exampleInputEmail1">Enable withdrwal system?</label>
+                        <select class="form-control" id="wEnabled" >
+                        <? if(siteConfig('wEnabled') == 1){ ?>
+                          <option value="1">Yes</option>            
+                          <option value="0">No</option>
+                        <? } else { ?>
+                          <option value="0">No</option>
+                          <option value="1">Yes</option>
+                        <? } ?>
+                        </select>                      
+                      <p style="color:#999">If the withdrawal system is enabled a new button will appear in the profile page of the users for let them send credits each others<br><br>
+                      For example girls may ask for credits for unblock photos or accept videocalling </p>
+
+                    </div>
+                    <div class="form-group">
+                      <label for="exampleInputEmail1">Set in days how much time the user must wait for get the money</label>
+                      <input class="form-control" type="number" id="wDays" value="<?= siteConfig('wTime');?>"  />
+                    </div>                     
+                  </div><!-- /.box-body -->
+                  <div class="box-footer">
+                    <a href="#" onclick="updateWithdrawl()" class="btn btn-primary">Update Withdrawl settings </a>
+                  </div>
+                </form>
+              </div><!-- /.box -->
+            </div>             
+            <div class="col-md-6">
+              <!-- general form elements -->
+              <div class="box box-primary">
+                <div class="box-header">
+                  <h3 class="box-title">Cash out prices</h3>
+                </div><!-- /.box-header -->
+                <!-- form start -->
+                <form role="form" action="#" id="cashout-settings">
+                  <input type="hidden" value="cashout" name="action" />        
+                  <div class="box-body">
+                  <table style="width: 100%;text-align: left;">
+                    <tr style="width: 100%;margin-bottom: 20px">
+                  <td style="display: inline-table;width: 35%"> Credits<br> Amount of credits</td>
+                  <td style="display: inline-table;width: 30%"> Money<br>Payout to send in <?= $sm['config']['currency']; ?></td></tr>
+                  </table>                                       
+                <?php
+                  $w = getWithdrawPackages();
+                  $all = end($w);
+                  $all = $all['id'] + 1;                  
+                  foreach($w as $entry){  ?>
+                      <div class="form-group">                     
+                             <input class="form-control" id="cashoutCredits<?= $entry['id'];?>" style="display: inline-table;width: 35%" type="number" value="<?= $entry['credits'];?>" />
+                             <input class="form-control" id="cashoutMoney<?= $entry['id'];?>" style="display: inline-table;width: 35%" type="number" value="<?= $entry['price'];?>" />                             
+                              <div style="display: inline-table;width: 20%">
+                              <a href="#" onClick="uCashout(<?= $entry['id'];?>)" class="btn btn-success" style="display: inline-table;margin-right: 3px"><i class="fa fa-check"></i></a>                                
+                              <a href="#" onClick="dCashout(<?= $entry['id'];?>)" class="btn btn-danger" style="display: inline-table;"><i class="fa fa-close"></i></a>
+                              </div>                            
+                      </div>
+                  <?php } ?>  
+                     <div class="form-group">                     
+                             <input class="form-control" id="cashoutCredits" style="display: inline-table;width: 35%" placeholder="Cashout Required Credits" />
+                             <input class="form-control" placeholder="Cashout money" id="cashoutMoney" style="display: inline-table;width: 35%"  />                             
+                              <div style="display: inline-table;width: 20%">
+                              <a href="#" id="addCashout"  class="btn btn-success" style="display: inline-table;margin-right: 3px"><i class="fa fa-plus"></i></a>                                                                
+                              </div>                            
+                      </div>                        
+                  </div><!-- /.box-body -->
+                </form>
+              </div><!-- /.box -->
+      </div> 
+
+    </div>  
+  </section>
+</div>  
+<script>
+document.getElementById("addCashout").addEventListener("click", addCashout);
+function addCashout(){
+  var id = <?= $all; ?>;
+  var credits = $('#cashoutCredits').val();
+  var price = $('#cashoutMoney').val();
+  window.location.href = 'index.php?page=admin&p=withdrawl&a='+id+'&credits='+credits+'&price='+price;
+}
+function uCashout(id){
+  var credits = $('#cashoutCredits'+id).val();  
+  var price = $('#cashoutMoney'+id).val();
+  window.location.href = 'index.php?page=admin&p=withdrawl&u='+id+'&credits='+credits+'&price='+price;
+}
+function dCashout(id){
+  window.location.href = 'index.php?page=admin&p=withdrawl&d='+id;
+}
+function updateWithdrawl(){
+    var e = $('#wEnabled').val();
+    var d = $('#wDays').val();  
+    window.location.href = 'index.php?page=admin&p=withdrawl&update=1&e='+e+'&d='+d;
+}
+</script>
